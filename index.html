@@ -2,53 +2,60 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Get Token</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get LINE Token</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    button { background: #06C755; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 16px; cursor: pointer; }
+    #result { margin-top: 20px; background: #f0f0f0; padding: 15px; border-radius: 8px; display: none; word-break: break-all; }
+    .label { font-weight: bold; margin-top: 10px; }
+    .value { background: white; padding: 8px; border-radius: 4px; margin-top: 4px; font-size: 13px; }
+    .copy-btn { background: #555; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-top: 6px; }
+  </style>
 </head>
 <body>
 
-<button onclick="getToken()">🔑 Get Bearer Token</button>
-<br><br>
+  <h2>🔑 Get LINE Bearer Token</h2>
+  <button onclick="getToken()">Login & Get Token</button>
 
-<div id="result" style="word-break:break-all; background:#f0f0f0; padding:10px; display:none">
-  <b>Bearer Token:</b><br>
-  <span id="token-text"></span>
-  <br><br>
-  <b>line_user_id:</b><br>
-  <span id="userid-text"></span>
-  <br><br>
-  <button onclick="copyToken()">📋 Copy Token</button>
-</div>
+  <div id="result">
+    <div class="label">Bearer Token:</div>
+    <div class="value" id="token-text"></div>
+    <button class="copy-btn" onclick="copy('token-text')">📋 Copy Token</button>
 
-<script>
-  const LIFF_ID = "YOUR_LIFF_ID"; // ← ใส่ LIFF ID ของคุณตรงนี้
+    <div class="label" style="margin-top:16px">line_user_id:</div>
+    <div class="value" id="userid-text"></div>
+    <button class="copy-btn" onclick="copy('userid-text')">📋 Copy User ID</button>
+  </div>
 
-  async function getToken() {
-    await liff.init({ liffId: LIFF_ID });
+  <script>
+    const LIFF_ID = "2009536501-ejtFeW3V";
 
-    if (!liff.isLoggedIn()) {
-      liff.login();
-      return;
+    async function getToken() {
+      await liff.init({ liffId: LIFF_ID });
+
+      if (!liff.isLoggedIn()) {
+        liff.login();
+        return;
+      }
+
+      const token = liff.getAccessToken();
+      const profile = await liff.getProfile();
+
+      document.getElementById("token-text").innerText = token;
+      document.getElementById("userid-text").innerText = profile.userId;
+      document.getElementById("result").style.display = "block";
+
+      console.log("Bearer Token:", token);
+      console.log("line_user_id:", profile.userId);
     }
 
-    const token = liff.getAccessToken();
-    const profile = await liff.getProfile();
-
-    document.getElementById("token-text").innerText = token;
-    document.getElementById("userid-text").innerText = profile.userId;
-    document.getElementById("result").style.display = "block";
-
-    // Log ออกมาให้ Copy ง่ายๆ ใน DevTools ด้วย
-    console.log("Bearer Token:", token);
-    console.log("line_user_id:", profile.userId);
-  }
-
-  function copyToken() {
-    const token = document.getElementById("token-text").innerText;
-    navigator.clipboard.writeText(token);
-    alert("Copied!");
-  }
-</script>
+    function copy(id) {
+      const text = document.getElementById(id).innerText;
+      navigator.clipboard.writeText(text).then(() => alert("Copied!"));
+    }
+  </script>
 
 </body>
 </html>
