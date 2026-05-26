@@ -6,54 +6,114 @@
   <title>Get LINE Token</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    button { background: #06C755; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 16px; cursor: pointer; }
-    #result { margin-top: 20px; background: #f0f0f0; padding: 15px; border-radius: 8px; display: none; word-break: break-all; }
-    .label { font-weight: bold; margin-top: 10px; }
-    .value { background: white; padding: 8px; border-radius: 4px; margin-top: 4px; font-size: 13px; }
-    .copy-btn { background: #555; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-top: 6px; }
+    body { font-family: sans-serif; padding: 20px; max-width: 600px; }
+    h2 { color: #06C755; }
+    .btn-green { background: #06C755; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 16px; cursor: pointer; width: 100%; margin-bottom: 10px; }
+    .btn-blue { background: #0066cc; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 16px; cursor: pointer; width: 100%; }
+    .card { margin-top: 16px; background: #f0f0f0; padding: 15px; border-radius: 8px; display: none; }
+    .label { font-weight: bold; margin-top: 12px; font-size: 13px; color: #333; }
+    .value { background: white; padding: 8px; border-radius: 4px; margin-top: 4px; font-size: 12px; word-break: break-all; border: 1px solid #ddd; }
+    .copy-btn { background: #555; color: white; border: none; padding: 5px 12px; border-radius: 4px; cursor: pointer; margin-top: 5px; font-size: 12px; }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; color: white; margin-bottom: 4px; }
+    .tag-green { background: #06C755; }
+    .tag-blue { background: #0066cc; }
   </style>
 </head>
 <body>
 
-  <h2>🔑 Get LINE Bearer Token</h2>
-  <button onclick="getToken()">Login & Get Token</button>
+  <h2>🔑 LINE Token Helper</h2>
 
-  <div id="result">
+  <!-- Section 1: LIFF Token -->
+  <button class="btn-green" onclick="getLiffToken()">1️⃣ Get LIFF Access Token (LINE Login)</button>
+
+  <div class="card" id="liff-card">
+    <span class="tag tag-green">LIFF Token</span>
+
     <div class="label">Bearer Token:</div>
-    <div class="value" id="token-text"></div>
-    <button class="copy-btn" onclick="copy('token-text')">📋 Copy Token</button>
+    <div class="value" id="liff-token"></div>
+    <button class="copy-btn" onclick="copy('liff-token')">📋 Copy</button>
 
-    <div class="label" style="margin-top:16px">line_user_id:</div>
-    <div class="value" id="userid-text"></div>
-    <button class="copy-btn" onclick="copy('userid-text')">📋 Copy User ID</button>
+    <div class="label">line_user_id:</div>
+    <div class="value" id="liff-userid"></div>
+    <button class="copy-btn" onclick="copy('liff-userid')">📋 Copy</button>
+
+    <div class="label">Display Name:</div>
+    <div class="value" id="liff-name"></div>
+  </div>
+
+  <br>
+
+  <!-- Section 2: Channel Access Token -->
+  <button class="btn-blue" onclick="getChannelToken()">2️⃣ Get Channel Access Token (Messaging API)</button>
+
+  <div class="card" id="channel-card">
+    <span class="tag tag-blue">Channel Access Token</span>
+
+    <div class="label">Access Token:</div>
+    <div class="value" id="channel-token"></div>
+    <button class="copy-btn" onclick="copy('channel-token')">📋 Copy</button>
+
+    <div class="label">หมดอายุใน:</div>
+    <div class="value" id="channel-expire"></div>
   </div>
 
   <script>
-    const LIFF_ID = "2009536501-ejtFeW3V";
+    // ====== CONFIG ======
+    const LIFF_ID      = "2009536501-ejtFeW3V";
+    const CHANNEL_ID   = "2009536355";
+    const CHANNEL_SECRET = "6f4e3f0c2c6f930d91a6b51826a5ef63";
+    // ====================
 
-    async function getToken() {
+    // 1. LIFF Access Token
+    async function getLiffToken() {
       await liff.init({ liffId: LIFF_ID });
-
       if (!liff.isLoggedIn()) {
         liff.login();
         return;
       }
-
       const token = liff.getAccessToken();
       const profile = await liff.getProfile();
 
-      document.getElementById("token-text").innerText = token;
-      document.getElementById("userid-text").innerText = profile.userId;
-      document.getElementById("result").style.display = "block";
+      document.getElementById("liff-token").innerText = token;
+      document.getElementById("liff-userid").innerText = profile.userId;
+      document.getElementById("liff-name").innerText = profile.displayName;
+      document.getElementById("liff-card").style.display = "block";
 
-      console.log("Bearer Token:", token);
-      console.log("line_user_id:", profile.userId);
+      console.log("LIFF Token:", token);
+      console.log("User ID:", profile.userId);
+    }
+
+    // 2. Channel Access Token
+    async function getChannelToken() {
+      try {
+        const res = await fetch("https://api.line.me/oauth2/v3/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            grant_type: "client_credentials",
+            client_id: CHANNEL_ID,
+            client_secret: CHANNEL_SECRET
+          })
+        });
+        const data = await res.json();
+
+        if (data.access_token) {
+          const hours = Math.floor(data.expires_in / 3600);
+          document.getElementById("channel-token").innerText = data.access_token;
+          document.getElementById("channel-expire").innerText = `${hours} ชั่วโมง (${data.expires_in} วินาที)`;
+          document.getElementById("channel-card").style.display = "block";
+          console.log("Channel Token:", data.access_token);
+        } else {
+          alert("Error: " + JSON.stringify(data));
+        }
+      } catch (e) {
+        alert("เกิดข้อผิดพลาด: " + e.message);
+      }
     }
 
     function copy(id) {
       const text = document.getElementById(id).innerText;
-      navigator.clipboard.writeText(text).then(() => alert("Copied!"));
+      navigator.clipboard.writeText(text).then(() => alert("✅ Copied!"));
     }
   </script>
 
