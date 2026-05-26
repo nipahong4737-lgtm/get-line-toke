@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Get Token</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+
+<button onclick="getToken()">🔑 Get Bearer Token</button>
+<br><br>
+
+<div id="result" style="word-break:break-all; background:#f0f0f0; padding:10px; display:none">
+  <b>Bearer Token:</b><br>
+  <span id="token-text"></span>
+  <br><br>
+  <b>line_user_id:</b><br>
+  <span id="userid-text"></span>
+  <br><br>
+  <button onclick="copyToken()">📋 Copy Token</button>
+</div>
+
+<script>
+  const LIFF_ID = "YOUR_LIFF_ID"; // ← ใส่ LIFF ID ของคุณตรงนี้
+
+  async function getToken() {
+    await liff.init({ liffId: LIFF_ID });
+
+    if (!liff.isLoggedIn()) {
+      liff.login();
+      return;
+    }
+
+    const token = liff.getAccessToken();
+    const profile = await liff.getProfile();
+
+    document.getElementById("token-text").innerText = token;
+    document.getElementById("userid-text").innerText = profile.userId;
+    document.getElementById("result").style.display = "block";
+
+    // Log ออกมาให้ Copy ง่ายๆ ใน DevTools ด้วย
+    console.log("Bearer Token:", token);
+    console.log("line_user_id:", profile.userId);
+  }
+
+  function copyToken() {
+    const token = document.getElementById("token-text").innerText;
+    navigator.clipboard.writeText(token);
+    alert("Copied!");
+  }
+</script>
+
+</body>
+</html>
