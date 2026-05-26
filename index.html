@@ -60,8 +60,7 @@
   <script>
     // ====== CONFIG ======
     const LIFF_ID      = "2009536501-ejtFeW3V";
-    const CHANNEL_ID   = "2009536355";
-    const CHANNEL_SECRET = "6f4e3f0c2c6f930d91a6b51826a5ef63";
+   
     // ====================
 
     // 1. LIFF Access Token
@@ -71,7 +70,7 @@
         liff.login();
         return;
       }
-      const token = liff.getAccessToken();
+      const token = liff.getIDToken();
       const profile = await liff.getProfile();
 
       document.getElementById("liff-token").innerText = token;
